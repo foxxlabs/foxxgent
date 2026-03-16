@@ -32,7 +32,7 @@ PAIRING_CODE = secrets.token_hex(4).upper()
 PAIRED_USERS = {}
 
 print(f"\n{'='*50}")
-print(f"  FoxxGent - AI System Controller")
+print(f"  FoxxGent - AI Agent")
 print(f"{'='*50}")
 print(f"  🔐 Pairing Code: {PAIRING_CODE}")
 print(f"  📱 Send this code via Telegram: pair {PAIRING_CODE}")

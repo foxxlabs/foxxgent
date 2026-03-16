@@ -1,6 +1,6 @@
 # FoxxGent Security Policy
 
-This document outlines the security practices and policies for FoxxGent, an AI-powered system controller.
+This document outlines the security practices and policies for FoxxGent, an AI-powered AI agent.
 
 ## Supported Versions
 

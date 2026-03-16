@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FoxxGent Interactive Installation Script
+# FoxxGent AI Agent Installation Script
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash

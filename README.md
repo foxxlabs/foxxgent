@@ -2,26 +2,26 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2.svg)](https://discord.gg/placeholder)
 
-# FoxxGent - AI System Controller
+# FoxxGent - AI Agent
 
-> Control your server through natural language with autonomous AI reasoning
+> Autonomous AI agent that can control your server through natural language
 
-## Quick Install (One-Line)
-
-Run this command to install FoxxGent with interactive setup:
+## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh -o install_foxxgent.sh && bash install_foxxgent.sh
 ```
 
-Or to clone the repository first and then install:
-
+Or use Docker directly:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install-bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/.env.example -o .env.example
+cp .env.example .env && nano .env
+docker-compose up -d
 ```
 
 ## Table of Contents
-- [Quick Install](#quick-install-one-line)
+- [Quick Install](#quick-install)
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Security](#security)

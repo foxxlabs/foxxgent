@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "foxxgent"
 version = "0.1.0"
-description = "FoxxGent is an AI-powered system controller that lets you manage your server through a friendly chat interface (Web UI or Telegram). It combines autonomous AI reasoning with system administration capabilities."
+description = "FoxxGent is an AI agent that lets you manage your server through a friendly chat interface (Web UI or Telegram). It combines autonomous AI reasoning with system administration capabilities."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
