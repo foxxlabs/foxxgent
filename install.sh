@@ -1,30 +1,18 @@
 #!/bin/bash
 #
-# FoxxGent Installation Script
-# 
-# This script sets up FoxxGent on your system. It handles:
-# - Dependency checking
-# - Virtual environment creation
-# - Environment configuration
-# - Database initialization
+# FoxxGent Interactive Installation Script
 #
 # Usage:
-#   ./install.sh              # Default installation with virtual environment
-#   ./install.sh --system     # System-wide installation
-#   ./install.sh --upgrade    # Upgrade existing installation
-#   ./install.sh --help       # Show this help message
+#   curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/install.sh | bash
+#   ./install.sh
 #
 
 set -o pipefail
 
+trap 'echo -e "\n\n${YELLOW}Installation cancelled.${NC}"' INT TERM
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
-
-MIN_PYTHON_VERSION="3.10"
-VENV_DIR="$SCRIPT_DIR/venv"
-PORT=8000
-SYSTEM_WIDE=false
-UPGRADE=false
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,6 +21,8 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
+
+INSTALL_TYPE=""
 
 print_header() {
     echo -e "\n${BOLD}${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -60,42 +50,197 @@ print_step() {
     echo -e "\n${BOLD}${YELLOW}▸ $1${NC}"
 }
 
-show_help() {
-    print_header
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  --help      Show this help message"
-    echo "  --upgrade   Upgrade existing installation"
-    echo "  --system    Install system-wide (not in virtual environment)"
-    echo ""
-    echo "Examples:"
-    echo "  $0              # Default installation"
-    echo "  $0 --upgrade    # Upgrade existing installation"
-    echo "  $0 --system     # System-wide installation"
-    exit 0
+prompt_input() {
+    local prompt="$1"
+    local var_name="$2"
+    local required="$3"
+    local default="$4"
+    local value=""
+
+    while true; do
+        if [[ -n "$default" ]]; then
+            echo -en "${CYAN}$prompt${NC} [$default]: "
+        else
+            echo -en "${CYAN}$prompt${NC}: "
+        fi
+        
+        if IFS= read -r value; then
+            if [[ -z "$value" && -n "$default" ]]; then
+                value="$default"
+            fi
+            
+            if [[ -z "$value" && "$required" == "true" ]]; then
+                print_error "$var_name is required"
+                continue
+            fi
+            break
+        fi
+    done
+    
+    eval "$var_name='$value'"
 }
 
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            --help)
-                show_help
+select_install_type() {
+    echo -e "${BOLD}Select installation type:${NC}"
+    echo ""
+    echo "  1) Local (Python virtualenv)"
+    echo "  2) Docker"
+    echo ""
+    
+    while true; do
+        echo -en "${CYAN}Enter your choice${NC} [1-2]: "
+        read -r choice
+        
+        case "$choice" in
+            1)
+                INSTALL_TYPE="local"
+                break
                 ;;
-            --upgrade)
-                UPGRADE=true
-                shift
-                ;;
-            --system)
-                SYSTEM_WIDE=true
-                shift
+            2)
+                INSTALL_TYPE="docker"
+                break
                 ;;
             *)
-                print_error "Unknown option: $1"
-                show_help
+                print_error "Invalid option. Please enter 1 or 2."
                 ;;
         esac
     done
+    
+    echo ""
+}
+
+check_docker() {
+    print_step "Checking Docker installation..."
+    
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not installed."
+        echo "Please install Docker first: https://docs.docker.com/get-docker/"
+        exit 1
+    fi
+    
+    print_success "Docker found"
+    
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+        print_error "Docker Compose is not installed."
+        echo "Please install Docker Compose first: https://docs.docker.com/compose/install/"
+        exit 1
+    fi
+    
+    if docker compose version &> /dev/null; then
+        DOCKER_COMPOSE="docker compose"
+    else
+        DOCKER_COMPOSE="docker-compose"
+    fi
+    
+    print_success "Docker Compose found ($DOCKER_COMPOSE)"
+}
+
+docker_build_start() {
+    print_step "Building and starting Docker container..."
+    
+    if [[ ! -f "$SCRIPT_DIR/docker-compose.yml" ]]; then
+        print_error "docker-compose.yml not found!"
+        exit 1
+    fi
+    
+    $DOCKER_COMPOSE up -d --build
+    
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to build/start Docker container"
+        exit 1
+    fi
+    
+    print_success "Docker container started"
+}
+
+docker_show_url() {
+    local port="${PORT:-8000}"
+    
+    echo ""
+    echo -e "${BOLD}${GREEN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}${GREEN}  Installation Complete!${NC}"
+    echo -e "${BOLD}${GREEN}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${BOLD}FoxxGent is running in Docker!${NC}"
+    echo ""
+    echo -e "${BOLD}Access:${NC}"
+    echo "  - Web UI: http://localhost:$port"
+    echo ""
+    echo -e "${BOLD}Useful commands:${NC}"
+    echo "  - View logs: $DOCKER_COMPOSE logs -f"
+    echo "  - Stop: $DOCKER_COMPOSE down"
+    echo "  - Restart: $DOCKER_COMPOSE restart"
+    echo ""
+    echo -e "${BOLD}Configuration:${NC}"
+    echo "  - Edit .env: $SCRIPT_DIR/.env"
+    echo "  - Restart after changing .env: $DOCKER_COMPOSE restart"
+    echo ""
+}
+
+docker_setup() {
+    print_header
+    
+    echo -e "${BOLD}Welcome to FoxxGent Docker Installation!${NC}"
+    echo "This will set up FoxxGent using Docker."
+    echo ""
+    
+    check_docker
+    create_directories
+    setup_env_file
+    docker_build_start
+    docker_show_url
+}
+
+create_directories() {
+    print_step "Creating required directories..."
+    
+    local dirs=("data" "logs" "cache")
+    
+    for dir in "${dirs[@]}"; do
+        if [[ ! -d "$SCRIPT_DIR/$dir" ]]; then
+            mkdir -p "$SCRIPT_DIR/$dir"
+            print_success "Created $dir/"
+        else
+            print_info "$dir/ already exists"
+        fi
+    done
+}
+
+setup_env_file() {
+    print_step "Setting up environment configuration..."
+    
+    if [[ -f "$SCRIPT_DIR/.env" ]]; then
+        print_info ".env file already exists"
+        echo -en "${YELLOW}Overwrite existing .env?${NC} [y/N]: "
+        read -r confirm
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            print_info "Keeping existing .env file"
+            return 0
+        fi
+    fi
+    
+    echo ""
+    print_info "Required configuration:"
+    echo ""
+    
+    prompt_input "OpenRouter API Key" "OPENROUTER_API_KEY" "true"
+    
+    echo ""
+    print_info "Optional configuration:"
+    echo ""
+    
+    prompt_input "Telegram Bot Token (press Enter to skip)" "TELEGRAM_BOT_KEY" "false" ""
+    prompt_input "Database path (press Enter for default)" "DB_PATH" "false" "foxxgent.db"
+    prompt_input "Server port (press Enter for default)" "PORT" "false" "8000"
+    
+    cat > "$SCRIPT_DIR/.env" << EOF
+OPENROUTER_API_KEY=$OPENROUTER_API_KEY
+TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY
+DB_PATH=$DB_PATH
+PORT=$PORT
+EOF
+    
+    print_success "Created .env file"
 }
 
 check_python() {
@@ -103,7 +248,7 @@ check_python() {
     
     if ! command -v python3 &> /dev/null; then
         print_error "Python 3 is not installed."
-        echo "Please install Python $MIN_PYTHON_VERSION or higher."
+        echo "Please install Python 3.10 or higher."
         exit 1
     fi
     
@@ -112,98 +257,45 @@ check_python() {
     PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info[1])')
     
     if [[ $PYTHON_MAJOR -lt 3 ]] || [[ $PYTHON_MAJOR -eq 3 && $PYTHON_MINOR -lt 10 ]]; then
-        print_error "Python version $PYTHON_VERSION is too old. Minimum required: $MIN_PYTHON_VERSION"
+        print_error "Python version $PYTHON_VERSION is too old. Minimum required: 3.10"
         exit 1
     fi
     
     print_success "Python $PYTHON_VERSION found"
 }
 
-check_git() {
-    print_step "Checking Git installation..."
+setup_virtual_env() {
+    print_step "Setting up virtual environment..."
     
-    if ! command -v git &> /dev/null; then
-        print_warning "Git is not installed. Some features may not work properly."
-        echo "  Install with: apt-get install git (Debian/Ubuntu) or yum install git (RHEL/CentOS)"
+    local venv_dir="$SCRIPT_DIR/venv"
+    
+    if [[ -d "$venv_dir" ]]; then
+        print_info "Virtual environment already exists"
+        echo -en "${YELLOW}Recreate virtual environment?${NC} [y/N]: "
+        read -r confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            rm -rf "$venv_dir"
+            python3 -m venv "$venv_dir"
+            print_success "Virtual environment recreated"
+        else
+            print_info "Using existing virtual environment"
+        fi
     else
-        GIT_VERSION=$(git --version | cut -d' ' -f3)
-        print_success "Git $GIT_VERSION found"
+        python3 -m venv "$venv_dir"
+        print_success "Virtual environment created"
     fi
 }
 
-check_requirements_file() {
-    print_step "Checking requirements file..."
+install_dependencies() {
+    print_step "Installing dependencies..."
     
     if [[ ! -f "$SCRIPT_DIR/requirements.txt" ]]; then
         print_error "requirements.txt not found!"
         exit 1
     fi
     
-    DEP_COUNT=$(wc -l < "$SCRIPT_DIR/requirements.txt")
-    print_success "requirements.txt found ($DEP_COUNT packages)"
-}
-
-create_virtual_env() {
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        print_step "Skipping virtual environment (system-wide mode)"
-        return
-    fi
-    
-    print_step "Setting up virtual environment..."
-    
-    if [[ -d "$VENV_DIR" ]]; then
-        if [[ "$UPGRADE" == true ]]; then
-            print_info "Upgrading existing virtual environment..."
-            python3 -m venv "$VENV_DIR" --upgrade
-            print_success "Virtual environment upgraded"
-        else
-            print_info "Virtual environment already exists at $VENV_DIR"
-        fi
-    else
-        print_info "Creating virtual environment..."
-        python3 -m venv "$VENV_DIR"
-        print_success "Virtual environment created"
-    fi
-}
-
-get_pip_command() {
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        echo "pip3"
-    else
-        if [[ -f "$VENV_DIR/bin/pip" ]]; then
-            echo "$VENV_DIR/bin/pip"
-        else
-            echo "pip"
-        fi
-    fi
-}
-
-activate_venv() {
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        return
-    fi
-    
-    if [[ -f "$VENV_DIR/bin/activate" ]]; then
-        source "$VENV_DIR/bin/activate"
-    else
-        print_error "Virtual environment activation failed"
-        exit 1
-    fi
-}
-
-install_dependencies() {
-    print_step "Installing Python dependencies..."
-    
-    local PIP_CMD
-    PIP_CMD=$(get_pip_command)
-    
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        print_info "Installing system-wide (may require sudo)..."
-    else
-        print_info "Installing to virtual environment..."
-    fi
-    
-    $PIP_CMD install -r "$SCRIPT_DIR/requirements.txt"
+    "$SCRIPT_DIR/venv/bin/pip" install --upgrade pip -q
+    "$SCRIPT_DIR/venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt" -q
     
     if [[ $? -ne 0 ]]; then
         print_error "Failed to install dependencies"
@@ -213,161 +305,62 @@ install_dependencies() {
     print_success "Dependencies installed"
 }
 
-setup_environment() {
-    print_step "Setting up environment configuration..."
-    
-    if [[ ! -f "$SCRIPT_DIR/.env.example" ]]; then
-        print_error ".env.example not found!"
-        exit 1
-    fi
-    
-    if [[ -f "$SCRIPT_DIR/.env" ]]; then
-        print_info ".env already exists, skipping..."
-    else
-        cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-        print_success "Created .env from .env.example"
-        print_warning "Please edit .env and add your API keys!"
-    fi
-}
-
-check_port() {
-    print_step "Checking if port $PORT is available..."
-    
-    if command -v lsof &> /dev/null; then
-        if lsof -i :$PORT &> /dev/null; then
-            print_warning "Port $PORT is already in use!"
-            echo "  The server may already be running, or another application is using this port."
-            echo "  You can change the port in .env or stop the existing service."
-        else
-            print_success "Port $PORT is available"
-        fi
-    elif command -v ss &> /dev/null; then
-        if ss -tuln | grep -q ":$PORT "; then
-            print_warning "Port $PORT is already in use!"
-        else
-            print_success "Port $PORT is available"
-        fi
-    else
-        print_info "Could not check port availability (no lsof/ss available)"
-    fi
-}
-
-init_database() {
-    print_step "Initializing database..."
-    
-    local PYTHON_CMD
-    
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        PYTHON_CMD="python3"
-    else
-        PYTHON_CMD="$VENV_DIR/bin/python"
-    fi
-    
-    if $PYTHON_CMD -c "from database import init_db; init_db()" 2>/dev/null; then
-        print_success "Database initialized"
-    else
-        print_warning "Database initialization encountered an issue"
-        echo "  The database will be created automatically when the app first runs."
-    fi
-}
-
-verify_installation() {
-    print_step "Verifying installation..."
-    
-    local missing_deps=()
-    local PYTHON_CMD
-    local PIP_CMD
-    
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        PYTHON_CMD="python3"
-        PIP_CMD="pip3"
-    else
-        PYTHON_CMD="$VENV_DIR/bin/python"
-        PIP_CMD="$VENV_DIR/bin/pip"
-    fi
-    
-    declare -A module_map
-    module_map["fastapi"]="fastapi"
-    module_map["uvicorn"]="uvicorn"
-    module_map["sqlalchemy"]="sqlalchemy"
-    module_map["python-telegram-bot"]="telegram"
-    module_map["openai"]="openai"
-    
-    for pkg in fastapi uvicorn sqlalchemy python-telegram-bot openai; do
-        module_name="${module_map[$pkg]}"
-        if ! $PYTHON_CMD -c "import $module_name" 2>/dev/null; then
-            missing_deps+=("$pkg")
-        fi
-    done
-    
-    if [[ ${#missing_deps[@]} -gt 0 ]]; then
-        print_error "Missing dependencies: ${missing_deps[*]}"
-        exit 1
-    fi
-    
-    print_success "Installation verified"
-}
-
 print_next_steps() {
+    local port="${PORT:-8000}"
+    
     echo ""
     echo -e "${BOLD}${GREEN}═══════════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}${GREEN}  Installation Complete!${NC}"
     echo -e "${BOLD}${GREEN}═══════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "${BOLD}Next Steps:${NC}"
+    echo -e "${BOLD}To start FoxxGent:${NC}"
     echo ""
-    
-    if [[ "$SYSTEM_WIDE" == true ]]; then
-        echo "  1. Edit .env and add your API keys:"
-        echo "     nano $SCRIPT_DIR/.env"
-        echo ""
-        echo "  2. Start the server:"
-        echo "     python3 main.py"
-    else
-        echo "  1. Edit .env and add your API keys:"
-        echo "     nano $SCRIPT_DIR/.env"
-        echo ""
-        echo "  2. Activate the virtual environment:"
-        echo "     source $VENV_DIR/bin/activate"
-        echo ""
-        echo "  3. Start the server:"
-        echo "     python main.py"
-    fi
-    
+    echo "  source $SCRIPT_DIR/venv/bin/activate"
+    echo "  python $SCRIPT_DIR/main.py"
     echo ""
-    echo -e "${BOLD}Configuration:${NC}"
-    echo "  - OpenRouter API key is REQUIRED for AI features"
-    echo "  - Telegram bot token is OPTIONAL (for Telegram integration)"
-    echo "  - Google credentials are OPTIONAL (for Gmail/Calendar)"
+    echo -e "${BOLD}Or use the run script:${NC}"
+    echo "  $SCRIPT_DIR/runfoxx.sh"
     echo ""
     echo -e "${BOLD}Access:${NC}"
-    echo "  - Web UI: http://localhost:$PORT"
+    echo "  - Web UI: http://localhost:$port"
     echo ""
-    echo -e "${BOLD}Help:${NC}"
-    echo "  - Documentation: $SCRIPT_DIR/README.md"
-    echo "  - Run './install.sh --help' for options"
+    echo -e "${BOLD}Configuration:${NC}"
+    echo "  - Edit .env: $SCRIPT_DIR/.env"
     echo ""
 }
 
-main() {
-    parse_args "$@"
-    
-    if [[ "$EUID" -eq 0 ]] && [[ "$SYSTEM_WIDE" == false ]]; then
-        print_warning "Running as root. Consider using --system flag or a virtual environment."
-    fi
-    
+local_setup() {
     print_header
     
+    echo -e "${BOLD}Welcome to FoxxGent!${NC}"
+    echo "This script will set up FoxxGent on your system."
+    echo ""
+    
     check_python
-    check_git
-    check_requirements_file
-    create_virtual_env
+    create_directories
+    setup_env_file
+    setup_virtual_env
     install_dependencies
-    setup_environment
-    check_port
-    init_database
-    verify_installation
     print_next_steps
+}
+
+main() {
+    print_header
+    
+    echo -e "${BOLD}Welcome to FoxxGent!${NC}"
+    echo "This script will set up FoxxGent on your system."
+    echo ""
+    
+    select_install_type
+    
+    case "$INSTALL_TYPE" in
+        docker)
+            docker_setup
+            ;;
+        local)
+            local_setup
+            ;;
+    esac
 }
 
 main "$@"
