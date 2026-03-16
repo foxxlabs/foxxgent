@@ -12,13 +12,6 @@
 curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh -o install_foxxgent.sh && bash install_foxxgent.sh
 ```
 
-Or use Docker directly:
-```bash
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/docker-compose.yml -o docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/.env.example -o .env.example
-cp .env.example .env && nano .env
-docker-compose up -d
-```
 
 ## Table of Contents
 - [Quick Install](#quick-install)
