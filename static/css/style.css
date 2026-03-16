@@ -1,0 +1,1206 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+:root {
+    --ios-bg: #000000;
+    --ios-surface: rgba(255, 255, 255, 0.08);
+    --ios-surface-hover: rgba(255, 255, 255, 0.12);
+    --ios-surface-active: rgba(255, 255, 255, 0.18);
+    --ios-accent: #ff9500;
+    --ios-accent-hover: #ff9f0a;
+    --ios-accent-green: #30d158;
+    --ios-accent-orange: #ff9500;
+    --ios-accent-red: #ff453a;
+    --ios-text: #ffffff;
+    --ios-text-secondary: rgba(255, 255, 255, 0.6);
+    --ios-text-muted: rgba(255, 255, 255, 0.3);
+    --ios-border: rgba(255, 255, 255, 0.12);
+    --ios-glass: rgba(255, 255, 255, 0.05);
+    --ios-glass-heavy: rgba(40, 35, 30, 0.85);
+    --ios-blur: 20px;
+    --ios-radius: 20px;
+    --ios-radius-lg: 28px;
+    --ios-radius-sm: 12px;
+    
+    --glass-highlight: rgba(255, 255, 255, 0.15);
+    --glass-shadow: rgba(0, 0, 0, 0.4);
+    --glass-iridescent: linear-gradient(135deg, 
+        rgba(255, 0, 128, 0.1) 0%, 
+        rgba(255, 159, 10, 0.1) 25%, 
+        rgba(48, 209, 88, 0.1) 50%, 
+        rgba(10, 132, 255, 0.15) 75%, 
+        rgba(175, 82, 222, 0.1) 100%);
+    --glass-illumination: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #0f0f23 100%);
+    color: var(--ios-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 14px;
+    line-height: 1.4;
+    background-attachment: fixed;
+}
+
+/* iOS liquid glass background */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        radial-gradient(ellipse at 20% 20%, rgba(10, 132, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(48, 209, 88, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 159, 10, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 30% 70%, rgba(175, 82, 222, 0.08) 0%, transparent 40%),
+        radial-gradient(ellipse at 70% 30%, rgba(255, 0, 128, 0.05) 0%, transparent 40%);
+    animation: gradientFloat 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Liquid glass iridescent overlay */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--glass-iridescent);
+    animation: iridescentShift 15s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+    mix-blend-mode: overlay;
+}
+
+@keyframes gradientFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(2%, 2%) rotate(1deg); }
+    50% { transform: translate(-1%, 3%) rotate(-1deg); }
+    75% { transform: translate(1%, -1%) rotate(2deg); }
+}
+
+@keyframes iridescentShift {
+    0%, 100% { opacity: 0.3; }
+    25% { opacity: 0.5; }
+    50% { opacity: 0.4; }
+    75% { opacity: 0.6; }
+}
+
+/* iOS Navbar - Liquid Glass */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    height: 60px;
+    background: var(--ios-glass-heavy);
+    backdrop-filter: blur(var(--ios-blur));
+    -webkit-backdrop-filter: blur(var(--ios-blur));
+    border-bottom: 1px solid var(--ios-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.navbar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        transparent 100%);
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--ios-accent), #5e5ce6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+    animation: logoPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes logoPop {
+    0% { transform: scale(0); }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.nav-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff, rgba(255,255,255,0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 4px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    color: var(--ios-text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: var(--ios-radius-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--ios-accent);
+    transition: all 03s ease;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.nav-item:hover {
+    background: var(--ios-surface);
+    color: var(--ios-text);
+}
+
+.nav-item.active {
+    color: var(--ios-accent);
+    background: var(--ios-surface);
+}
+
+.nav-item.active::after {
+    width: 60%;
+}
+
+.nav-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.nav-item:hover .nav-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* iOS Container */
+.container-main {
+    padding: 16px;
+    padding-bottom: 100px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page {
+    display: none;
+    animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page:not(.hidden) {
+    display: block;
+}
+
+@keyframes pageIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px) scale(0.98); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* iOS Glass Cards - Liquid Glass Design */
+.glass-card {
+    background: var(--ios-glass-heavy);
+    backdrop-filter: blur(var(--ios-blur));
+    -webkit-backdrop-filter: blur(var(--ios-blur));
+    border: 1px solid var(--ios-border);
+    border-radius: var(--ios-radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 var(--glass-highlight),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cardFloat 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: highlightMove 3s ease-in-out infinite;
+}
+
+.glass-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.03) 30%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 70%,
+        transparent 100%
+    );
+    animation: glassShimmer 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes highlightMove {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+@keyframes glassShimmer {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(100%) skewX(-15deg); }
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes cardFloat {
+    from { opacity: 0; transform: translateY(30px); }
+}
+
+.glass-card:nth-child(1) { animation-delay: 0.1s; }
+.glass-card:nth-child(2) { animation-delay: 0.2s; }
+.glass-card:nth-child(3) { animation-delay: 0.3s; }
+
+.glass-card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.glass-card h3 .material-icons {
+    font-size: 20px;
+    color: var(--ios-accent);
+}
+
+/* iOS Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--ios-radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn:hover::before {
+    opacity: 1;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--ios-accent), #5e5ce6);
+    color: white;
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(10, 132, 255, 0.4);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: var(--ios-surface);
+    color: var(--ios-text);
+    border: 1px solid var(--ios-border);
+}
+
+.btn-secondary:hover {
+    background: var(--ios-surface-hover);
+    border-color: var(--ios-accent);
+}
+
+.btn-secondary:active {
+    background: var(--ios-surface-active);
+}
+
+/* iOS Input */
+.material-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--ios-surface);
+    border: 1px solid var(--ios-border);
+    border-radius: var(--ios-radius-sm);
+    color: var(--ios-text);
+    font-size: 15px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.material-input:focus {
+    border-color: var(--ios-accent);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+    background: var(--ios-surface-hover);
+}
+
+.material-input::placeholder {
+    color: var(--ios-text-muted);
+}
+
+/* iOS Chat */
+.chat-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+}
+
+.message {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    animation: messageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes messageIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.message.user .message-avatar {
+    background: linear-gradient(135deg, var(--ios-accent), #5e5ce6);
+}
+
+.message.assistant .message-avatar {
+    background: linear-gradient(135deg, var(--ios-accent-green), #30d158);
+}
+
+.message-content {
+    padding: 14px 18px;
+    border-radius: var(--ios-radius-lg);
+    background: var(--ios-surface);
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message.user .message-content {
+    background: var(--ios-accent);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.assistant .message-content {
+    border-bottom-left-radius: 4px;
+}
+
+.message.typing .message-content {
+    background: var(--ios-surface-hover);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.message.typing .message-content .typing-spinner {
+    display: inline-flex;
+    align-items: center;
+}
+
+.message.typing .message-content .typing-text {
+    flex: 1;
+}
+
+.typing .message-content .material-icons {
+    animation: spin 1s linear infinite;
+    color: var(--ios-accent);
+}
+
+.typing .message-content .material-icons {
+    animation: spin 1s linear infinite;
+    color: var(--ios-accent);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* iOS Chat Input */
+.chat-input-container {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: var(--ios-glass-heavy);
+    backdrop-filter: blur(var(--ios-blur));
+    border-radius: var(--ios-radius-lg);
+    margin-top: 16px;
+    border: 1px solid var(--ios-border);
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 var(--glass-highlight);
+    position: relative;
+    overflow: hidden;
+}
+
+.chat-input-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 100%);
+}
+
+.chat-input-container input {
+    flex: 1;
+    padding: 14px;
+    background: var(--ios-surface);
+    border: none;
+    border-radius: var(--ios-radius-sm);
+    color: var(--ios-text);
+    font-size: 15px;
+    outline: none;
+}
+
+.chat-input-container input:focus {
+    background: var(--ios-surface-hover);
+}
+
+.chat-commands {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.cmd-btn {
+    padding: 6px 12px;
+    background: var(--ios-surface);
+    border: 1px solid var(--ios-border);
+    border-radius: 20px;
+    color: var(--ios-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cmd-btn:hover {
+    background: var(--ios-surface-hover);
+    color: var(--ios-accent);
+    border-color: var(--ios-accent);
+}
+
+/* iOS Live Tiles Bar - Liquid Glass */
+.live-tiles-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 60px;
+    background: var(--ios-glass-heavy);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--ios-border);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    gap: 20px;
+    z-index: 1000;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 var(--glass-highlight),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.live-tiles-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%);
+}
+
+.live-tiles-bar::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--glass-iridescent);
+    animation: iridescentShift 10s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0.3;
+    z-index: -1;
+}
+
+@keyframes slideUp {
+    from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.live-tile-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--ios-surface);
+    border-radius: 16px;
+    min-width: 80px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.live-tile-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.live-tile-item:hover::before {
+    opacity: 1;
+}
+
+.live-tile-item:hover {
+    background: var(--ios-surface-hover);
+    transform: scale(1.05);
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.live-tile-item:active {
+    transform: scale(0.95);
+}
+
+.live-tile-item.active {
+    background: rgba(10, 132, 255, 0.2);
+    border: 1px solid var(--ios-accent);
+}
+
+.tile-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ios-accent);
+}
+
+.tile-icon .material-icons {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.live-tile-item:hover .tile-icon .material-icons {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.tile-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.tile-label {
+    font-size: 9px;
+    color: var(--ios-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.tile-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ios-text);
+}
+
+.tile-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--ios-border);
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+
+.tile-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ios-accent), #5e5ce6);
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 3px;
+}
+
+.tile-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ios-accent-green);
+    animation: pulse 1.5s infinite;
+}
+
+.tile-pulse.running {
+    background: var(--ios-accent);
+    animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4); }
+    50% { transform: scale(1.2); opacity: 0.7; box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
+}
+
+/* iOS Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: var(--ios-glass-heavy);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--ios-border);
+    border-radius: var(--ios-radius-lg);
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* iOS Forms */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ios-text-secondary);
+    margin-bottom: 8px;
+}
+
+/* iOS Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 51px;
+    height: 31px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--ios-surface);
+    border-radius: 31px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--ios-border);
+}
+
+.toggle-switch .slider::before {
+    position: absolute;
+    content: '';
+    height: 27px;
+    width: 27px;
+    left: 2px;
+    bottom: 1px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .slider {
+    background: var(--ios-accent-green);
+    border-color: var(--ios-accent-green);
+}
+
+.toggle-switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+/* iOS Status Chips */
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--ios-surface);
+    color: var(--ios-text-secondary);
+    border: 1px solid var(--ios-border);
+}
+
+.status-chip.online {
+    background: rgba(48, 209, 88, 0.15);
+    color: var(--ios-accent-green);
+    border-color: var(--ios-accent-green);
+}
+
+.status-chip.offline {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--ios-accent-red);
+    border-color: var(--ios-accent-red);
+}
+
+.status-chip.running {
+    background: rgba(10, 132, 255, 0.15);
+    color: var(--ios-accent);
+    border-color: var(--ios-accent);
+}
+
+/* iOS Icon Button */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ios-surface);
+    border: 1px solid var(--ios-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--ios-text-secondary);
+}
+
+.icon-btn:hover {
+    background: var(--ios-surface-hover);
+    color: var(--ios-text);
+    transform: scale(1.1);
+}
+
+.icon-btn:active {
+    transform: scale(0.9);
+}
+
+.icon-btn .material-icons {
+    font-size: 18px;
+}
+
+/* iOS Grid */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff, rgba(255,255,255,0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* iOS Select */
+select.material-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+/* iOS Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ios-surface);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ios-surface-hover);
+}
+
+/* iOS Hidden */
+.hidden {
+    display: none !important;
+}
+
+/* Live Thought Stream */
+.thought-stream {
+    font-family: monospace;
+    font-size: 11px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.thought-stream .thought {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--ios-surface);
+    border-left: 3px solid var(--ios-accent);
+    border-radius: 8px;
+    animation: thoughtSlide 0.3s ease;
+}
+
+@keyframes thoughtSlide {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.thought-stream .thought.thinking {
+    border-color: var(--ios-accent-orange);
+}
+
+.thought-stream .thought.executing {
+    border-color: var(--ios-accent);
+}
+
+.thought-stream .thought.verified {
+    border-color: var(--ios-accent-green);
+}
+
+.thought-stream .thought.failed {
+    border-color: var(--ios-accent-red);
+}
+
+/* Live Tile Pulse Animation */
+.live-tile.alert {
+    animation: tile-pulse 2s infinite;
+}
+
+@keyframes tile-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 159, 10, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 159, 10, 0); }
+}
+
+/* iOS Utility Classes */
+.text-center { text-align: center; }
+.text-muted { color: var(--ios-text-muted); }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+
+/* iOS Animations */
+.fade-in { animation: fadeIn 0.3s ease; }
+.slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-down { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.bounce { animation: bounce 0.5s ease; }
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* iOS Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--ios-text-muted);
+    text-align: center;
+}
+
+.empty-state .material-icons {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* iOS Task Card */
+.task-card {
+    background: var(--ios-surface);
+    border: 1px solid var(--ios-border);
+    border-radius: var(--ios-radius-sm);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: cardFloat 0.4s ease backwards;
+}
+
+.task-card:hover {
+    background: var(--ios-surface-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.task-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.task-desc {
+    font-size: 13px;
+    color: var(--ios-text-secondary);
+    margin-bottom: 12px;
+}
+
+.task-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.task-status.pending {
+    background: rgba(255, 159, 10, 0.15);
+    color: var(--ios-accent-orange);
+}
+
+.task-status.running {
+    background: rgba(10, 132, 255, 0.15);
+    color: var(--ios-accent);
+}
+
+.task-status.completed {
+    background: rgba(48, 209, 88, 0.15);
+    color: var(--ios-accent-green);
+}
+
+.task-status.failed {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--ios-accent-red);
+}
+
+.task-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--ios-text-muted);
+}
+
+/* AI Status Bar */
+.ai-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--ios-surface);
+    border-radius: var(--ios-radius-sm);
+    margin-bottom: 16px;
+}
+
+.ai-status-bar.thinking {
+    background: rgba(10, 132, 255, 0.1);
+    border: 1px solid var(--ios-accent);
+}
+
+.ai-status-bar.thinking .ai-status-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Container main padding for Live Tiles */
+.container-main {
+    padding-bottom: 100px;
+}

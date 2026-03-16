@@ -1,0 +1,119 @@
+version: '3.8'
+
+# FoxxGent Docker Compose - Git Deployment Options
+# ================================================
+# This file demonstrates multiple ways to deploy FoxxGent from git repositories.
+# Choose one of the three options below and comment/uncomment as needed.
+
+services:
+  # =============================================================================
+  # OPTION 1A: Build from LOCAL git repository
+  # Use this for local development or building from a local git repo
+  # =============================================================================
+  foxxgent-local:
+    build:
+      context: .  # Current directory (contains Dockerfile)
+      dockerfile: Dockerfile
+    image: foxxgent:local
+    container_name: foxxgent-local
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_PATH=foxxgent.db
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    volumes:
+      - ./data/foxxgent.db:/app/foxxgent.db
+      - ./data/.env:/app/.env:ro
+      - ./credentials.json:/app/credentials.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - foxxgent-network
+
+  # =============================================================================
+  # OPTION 1B: Build from REMOTE git repository (using git clone in build)
+  # Use this to build directly from a remote git repository
+  # Note: Docker build context must be local, but can pull from git during build
+  # =============================================================================
+  foxxgent-remote:
+    build:
+      context: .
+      dockerfile: Dockerfile.remote
+    image: foxxgent:remote
+    container_name: foxxgent-remote
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - DB_PATH=foxxgent.db
+      - PYTHONUNBUFFERED=1
+      - GIT_REPO=https://github.com/yourusername/foxxgent.git
+      - GIT_BRANCH=main
+    env_file:
+      - .env
+    volumes:
+      - ./data/foxxgent.db:/app/foxxgent.db
+      - ./data/.env:/app/.env:ro
+      - ./credentials.json:/app/credentials.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - foxxgent-network
+
+  # =============================================================================
+  # OPTION 2: Use PRE-BUILT image from Docker Hub or GHCR
+  # Pulls a pre-built image - fastest for production deployment
+  # =============================================================================
+  foxxgent-prod:
+    image: foxxgent/foxxgent:latest
+    # Alternatively, use GitHub Container Registry:
+    # image: ghcr.io/yourusername/foxxgent:latest
+    container_name: foxxgent-prod
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    environment:
+      - DB_PATH=foxxgent.db
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    volumes:
+      - ./data/foxxgent.db:/app/foxxgent.db
+      - ./data/.env:/app/.env:ro
+      - ./credentials.json:/app/credentials.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - foxxgent-network
+
+
+# =============================================================================
+# NETWORK CONFIGURATION
+# =============================================================================
+networks:
+  foxxgent-network:
+    driver: bridge
+    name: foxxgent-network
+
+
+# =============================================================================
+# VOLUME CONFIGURATION (for persistence)
+# =============================================================================
+volumes:
+  foxxgent-data:
+    name: foxxgent-data

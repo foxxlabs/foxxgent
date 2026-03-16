@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦊 FoxxGent - AI System Controller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="nav-logo">🦊</div>
+            <span class="nav-title">FoxxGent</span>
+        </div>
+        <div class="nav-menu">
+            <a href="#" class="nav-item active" data-page="chat">
+                <span class="material-icons nav-icon">chat</span>
+                <span>Chat</span>
+            </a>
+            <a href="#" class="nav-item" data-page="skills">
+                <span class="material-icons nav-icon">extension</span>
+                <span>Skills</span>
+            </a>
+            <a href="#" class="nav-item" data-page="logs">
+                <span class="material-icons nav-icon">article</span>
+                <span>Logs</span>
+            </a>
+            <a href="#" class="nav-item" data-page="config">
+                <span class="material-icons nav-icon">settings</span>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item" data-page="connections">
+                <span class="material-icons nav-icon">hub</span>
+                <span>Connections</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <!-- Chat Page -->
+        <div class="page" id="page-chat">
+            <div class="glass-card chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-avatar">F</div>
+                        <div class="message-content">
+                            Hey! I'm <b>FoxxGent</b>, your AI server assistant.<br><br>
+                            I can help you with:<br>
+                            • Running commands on your server<br>
+                            • Checking system status<br>
+                            • Sending messages to Telegram<br>
+                            • Managing files<br>
+                            • And more!<br><br>
+                            Just tell me what you want to do in plain English.
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-commands">
+                    <button class="cmd-btn" onclick="sendCommand('/new')" title="New Session">New</button>
+                    <button class="cmd-btn" onclick="sendCommand('/compact')" title="Compact Mode">Compact</button>
+                    <button class="cmd-btn" onclick="sendCommand('/status')" title="System Status">Status</button>
+                    <button class="cmd-btn" onclick="sendCommand('/help')" title="Help">Help</button>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" class="material-input" id="chatInput" placeholder="What would you like me to do?" autocomplete="off">
+                    <button class="btn btn-primary" id="sendButton">
+                        <span class="material-icons">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Page -->
+        <div class="page hidden" id="page-skills">
+            <div class="page-header">
+                <h2>Skills</h2>
+                <button class="btn btn-primary" onclick="showAddSkillModal()">
+                    <span class="material-icons">add</span>
+                    Add Skill
+                </button>
+            </div>
+            
+            <div class="glass-card">
+                <h3><span class="material-icons">extension</span> Installed Skills</h3>
+                <div id="skillsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <div class="glass-card">
+                <h3><span class="material-icons">add_circle</span> Add from URL</h3>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" class="material-input" id="skillUrl" placeholder="https://example.com/skill.json" style="flex:1; min-width: 200px;">
+                    <button class="btn btn-secondary" onclick="addSkillFromUrl()">Add</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Skill Modal -->
+        <div class="modal" id="addSkillModal" style="display: none;">
+            <div class="modal-content">
+                <h3>Add Skill</h3>
+                <div class="form-group">
+                    <label class="form-label">Paste Skill (Markdown Format)</label>
+                    <textarea class="material-input" id="skillMarkdown" rows="12" placeholder="name: my-skill
+version: 1.0.0
+description: What this skill does
+endpoint: https://api.example.com
+api_key: your_api_key_here
+
+# Tools this skill provides
+- tool1: description
+- tool2: description"></textarea>
+                    <small style="color: var(--ios-text-muted);">Paste your skill in markdown format above</small>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="saveNewSkillFromMarkdown()">Add Skill</button>
+                    <button class="btn btn-secondary" onclick="closeAddSkillModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page hidden" id="page-config">
+            <div class="page-header">
+                <h2>Settings</h2>
+                <button class="btn btn-primary" onclick="saveAllConfig()">Save All</button>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <div class="glass-card">
+                        <h3><span class="material-icons">smart_toy</span> AI Model</h3>
+                        <div class="form-group">
+                            <label class="form-label">Model</label>
+                            <select class="material-input" id="configModel">
+                                <option value="openai/gpt-oss-120b">GPT OSS 120B</option>
+                                <option value="openai/gpt-oss-20b">GPT OSS 20B</option>
+                                <option value="minimax/minimax-m2.5">MiniMax M2.5</option>
+                                <option value="x-ai/grok-4.1-fast">Grok 4.1 Fast</option>
+                                <option value="openrouter/auto">OpenRouter Auto</option>
+                                <option value="openrouter/free">OpenRouter Free</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Temperature</label>
+                            <input type="number" class="material-input" id="configTemp" value="0.7" min="0" max="2" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Tokens</label>
+                            <input type="number" class="material-input" id="configMaxTokens" value="100000" min="100" max="200000">
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <h3><span class="material-icons">extension</span> Tools</h3>
+                        <div id="toolsList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <!-- Tools will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="glass-card">
+                        <h3><span class="material-icons">telegram</span> Telegram</h3>
+                        <div class="form-group">
+                            <label class="form-label">Bot Status</label>
+                            <div id="botStatusConfig">
+                                <span class="status-chip offline">Checking...</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pairing Code</label>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span id="pairingCode" style="font-size: 24px; font-weight: 700; color: var(--ios-accent);">------</span>
+                                <button class="icon-btn" onclick="app.refreshPairingCode()">
+                                    <span class="material-icons">refresh</span>
+                                </button>
+                            </div>
+                            <small style="color: var(--ios-text-muted);">Share with users to pair Telegram</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Your User ID (for notifications)</label>
+                            <input type="text" class="material-input" id="configChatId" placeholder="123456789">
+                            <small style="color: var(--ios-text-muted);">Get from @RawDataBot</small>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <h3><span class="material-icons">hub</span> MCP Servers</h3>
+                        <div id="mcpServers" style="margin-bottom: 12px;"></div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="text" class="material-input" id="mcpName" placeholder="Server name" style="width: 120px;">
+                            <input type="text" class="material-input" id="mcpCommand" placeholder="npx" style="width: 80px;">
+                            <input type="text" class="material-input" id="mcpArgs" placeholder="@scope/package" style="width: 150px;">
+                            <button class="btn btn-secondary" onclick="addMcpServer()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div class="page hidden" id="page-logs">
+            <div class="page-header">
+                <h2>System Logs</h2>
+                <button class="btn btn-secondary" onclick="loadLogs()">
+                    <span class="material-icons">refresh</span>
+                    Refresh
+                </button>
+            </div>
+            <div class="glass-card">
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <select id="logLevel" class="material-input" style="width: auto;" onchange="loadLogs()">
+                        <option value="">All Levels</option>
+                        <option value="INFO">INFO</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="ERROR">ERROR</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="clearLogs()">Clear</button>
+                </div>
+                <div id="logContainer" style="font-family: monospace; font-size: 12px; background: #1a1a2e; padding: 16px; border-radius: 8px; max-height: 500px; overflow-y: auto;">
+                    <div style="color: var(--text-muted);">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connections Page -->
+        <div class="page hidden" id="page-connections">
+            <div class="page-header">
+                <h2>🔗 App Connections</h2>
+                <span class="status-chip" id="connectionCount">0 connected</span>
+            </div>
+            
+            <div class="grid-2">
+                <div>
+                    <div class="glass-card">
+                        <h3><span class="material-icons">extension</span> Available Apps</h3>
+                        <div style="margin-bottom: 12px;">
+                            <input type="text" class="material-input" id="appSearch" placeholder="Search apps..." onkeyup="filterApps()">
+                        </div>
+                        <div id="appCategories" style="max-height: 500px; overflow-y: auto;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="glass-card">
+                        <h3><span class="material-icons">check_circle</span> Connected Apps</h3>
+                        <div id="connectedApps" style="min-height: 200px;">
+                            <div style="color: var(--text-muted); padding: 20px; text-align: center;">
+                                No apps connected yet
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3><span class="material-icons">bolt</span> Available Actions</h3>
+                        <div id="connectionActions" style="min-height: 100px;">
+                            <div style="color: var(--text-muted);">Connect an app to see available actions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        async function saveTelegramConfig() {
+            const userId = document.getElementById('configUsername').value.trim();
+            if (!userId) {
+                alert('Please enter your Telegram User ID');
+                return;
+            }
+            if (!/^\d+$/.test(userId)) {
+                alert('User ID should be a number (e.g., 123456789)');
+                return;
+            }
+            localStorage.setItem('foxxgent_chat_id', userId);
+            alert('Settings saved! User ID: ' + userId);
+        }
+
+        async function resolveUsername() {
+            const username = document.getElementById('configUsername').value;
+            if (!username) {
+                alert('Please enter a username first');
+                return;
+            }
+
+            const usernameClean = username.replace('@', '').toLowerCase();
+
+            const response = await fetch('/api/pairing/users');
+            const data = await response.json();
+            
+            const matchedUser = data.users?.find(u => u.username && u.username.toLowerCase() === usernameClean);
+            
+            if (matchedUser) {
+                document.getElementById('resolvedChatId').style.display = 'block';
+                document.getElementById('chatIdDisplay').textContent = matchedUser.chat_id;
+                localStorage.setItem('foxxgent_chat_id', matchedUser.chat_id);
+                localStorage.setItem('foxxgent_username', username);
+                return;
+            }
+
+            const resolveResponse = await fetch('/api/telegram/resolve', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: username})
+            });
+
+            const resolveData = await resolveResponse.json();
+            if (resolveData.chat_id) {
+                document.getElementById('resolvedChatId').style.display = 'block';
+                document.getElementById('chatIdDisplay').textContent = resolveData.chat_id;
+                localStorage.setItem('foxxgent_chat_id', resolveData.chat_id);
+                localStorage.setItem('foxxgent_username', username);
+            } else {
+                alert('Could not find user. Make sure:\n1. User has sent a message to the bot\n2. Username is correct (without @)\n\nOr ask user to check @userinfobot');
+            }
+        }
+
+        async function testTelegramMessage() {
+            const chatId = document.getElementById('configChatId').value;
+            if (!chatId) {
+                alert('Please enter your Chat ID first');
+                return;
+            }
+
+            const response = await fetch('/api/telegram/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: chatId})
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                alert('Message sent! ✅');
+            } else {
+                alert('Failed: ' + data.output);
+            }
+        }
+
+        async function clearChatHistory() {
+            if (confirm('Clear all chat history?')) {
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="message assistant">
+                        <div class="message-avatar">F</div>
+                        <div class="message-content">Chat cleared!</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('createTaskModal');
+            if (event.target === modal) {
+                closeCreateTaskModal();
+            }
+        }
+    </script>
+
+    <!-- Live Tiles Status Bar -->
+    <div class="live-tiles-bar" id="liveTilesBar">
+        <div class="live-tile-item" id="tile-cpu">
+            <div class="tile-icon"><span class="material-icons">memory</span></div>
+            <div class="tile-content">
+                <div class="tile-label">CPU</div>
+                <div class="tile-value" id="tileCpuValue">0%</div>
+            </div>
+            <div class="tile-progress"><div class="tile-progress-bar" id="tileCpuBar"></div></div>
+        </div>
+        
+        <div class="live-tile-item" id="tile-memory">
+            <div class="tile-icon"><span class="material-icons">storage</span></div>
+            <div class="tile-content">
+                <div class="tile-label">Memory</div>
+                <div class="tile-value" id="tileMemValue">0%</div>
+            </div>
+            <div class="tile-progress"><div class="tile-progress-bar" id="tileMemBar"></div></div>
+        </div>
+        
+        <div class="live-tile-item" id="tile-tokens">
+            <div class="tile-icon"><span class="material-icons">token</span></div>
+            <div class="tile-content">
+                <div class="tile-label">Tokens</div>
+                <div class="tile-value" id="tileTokensValue">--</div>
+            </div>
+            <div class="tile-progress"><div class="tile-progress-bar" id="tileTokensBar" style="width: 0%"></div></div>
+        </div>
+        
+        <div class="live-tile-item" id="tile-agent">
+            <div class="tile-icon" id="agentTileIcon"><span class="material-icons">smart_toy</span></div>
+            <div class="tile-content">
+                <div class="tile-label">Agent</div>
+                <div class="tile-value" id="agentTileStatus">Idle</div>
+            </div>
+            <div class="tile-pulse" id="agentTilePulse"></div>
+        </div>
+        
+        <div class="live-tile-item" id="tile-time">
+            <div class="tile-icon"><span class="material-icons">schedule</span></div>
+            <div class="tile-content">
+                <div class="tile-label">Time</div>
+                <div class="tile-value" id="tileTimeValue">--:--</div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
