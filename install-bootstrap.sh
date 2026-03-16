@@ -3,8 +3,8 @@
 # FoxxGent Bootstrap Installer
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/install Bootstrap.sh | bash
-#   ./install Bootstrap.sh
+#   curl -fsSL https://raw.githubusercontent.com/USER/REPO/master/install-bootstrap.sh | bash
+#   ./install-bootstrap.sh
 
 set -o pipefail
 

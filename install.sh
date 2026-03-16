@@ -89,7 +89,7 @@ select_install_type() {
     
     while true; do
         echo -en "${CYAN}Enter your choice${NC} [1-2]: "
-        read -r choice
+        read -r choice || choice=""
         
         case "$choice" in
             1)

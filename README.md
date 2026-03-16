@@ -11,16 +11,14 @@
 Run this command to install FoxxGent with interactive setup:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash
 ```
 
 Or to clone the repository first and then install:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/main/install-bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install-bootstrap.sh | bash
 ```
-
-> **Note:** Replace `foxxlabs/foxxgent` with your actual GitHub repository.
 
 ## Table of Contents
 - [Quick Install](#quick-install-one-line)
