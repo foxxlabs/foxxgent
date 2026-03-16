@@ -13,7 +13,12 @@ set -o pipefail
 trap 'echo -e "\n\n${YELLOW}Installation cancelled.${NC}"; exit 130' INT TERM
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -z "$SCRIPT_DIR" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
 cd "$SCRIPT_DIR"
+
+GITHUB_REPO="https://raw.githubusercontent.com/foxxlabs/foxxgent/master"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -313,6 +318,39 @@ check_docker() {
     print_success "Docker Compose found ($DOCKER_COMPOSE)"
 }
 
+download_docker_files() {
+    print_step "Downloading required Docker files from GitHub..."
+    
+    local files=(
+        "docker-compose.yml"
+        "Dockerfile"
+        ".env.example"
+        "requirements.txt"
+    )
+    
+    for file in "${files[@]}"; do
+        local url="${GITHUB_REPO}/${file}"
+        local dest="${SCRIPT_DIR}/${file}"
+        
+        case "$file" in
+            *)
+                if [[ ! -f "$dest" ]]; then
+                    print_info "Downloading $file..."
+                    if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
+                        print_success "Downloaded $file"
+                    else
+                        rm -f "$dest"
+                        print_error "Failed to download $file"
+                        exit 1
+                    fi
+                else
+                    print_info "$file already exists"
+                fi
+                ;;
+        esac
+    done
+}
+
 docker_build_start() {
     print_step "Building and starting Docker container..."
     
@@ -364,6 +402,7 @@ docker_setup() {
     
     check_docker
     create_directories
+    download_docker_files
     setup_env_file
     docker_build_start
     docker_show_url
