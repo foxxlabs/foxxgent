@@ -3,13 +3,14 @@
 # FoxxGent Interactive Installation Script
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash
 #   ./install.sh
+#   ./install.sh --type local --api-key KEY --port 8000
 #
 
 set -o pipefail
 
-trap 'echo -e "\n\n${YELLOW}Installation cancelled.${NC}"' INT TERM
+trap 'echo -e "\n\n${YELLOW}Installation cancelled.${NC}"; exit 130' INT TERM
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -23,6 +24,95 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 INSTALL_TYPE=""
+ARG_API_KEY=""
+ARG_TELEGRAM_TOKEN=""
+ARG_PORT=""
+NON_INTERACTIVE=false
+ARGS_PROVIDED=false
+
+print_usage() {
+    cat << USAGE
+Usage: $0 [OPTIONS]
+
+Options:
+  -t, --type TYPE          Installation type: local or docker
+  -k, --api-key KEY       OpenRouter API key (required for non-interactive)
+      --telegram-token TOKEN  Telegram bot token (optional)
+  -p, --port PORT         Server port (default: 8000)
+  -h, --help              Show this help message
+
+Examples:
+  $0 --type local --api-key sk-xxx --port 8000
+  $0 --type docker --api-key sk-xxx --telegram-token xxx
+
+For curl | bash, run locally with arguments:
+  curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash -s -- --type local --api-key KEY
+USAGE
+}
+
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -t|--type)
+                ARG_INSTALL_TYPE="$2"
+                shift 2
+                ;;
+            -k|--api-key)
+                ARG_API_KEY="$2"
+                shift 2
+                ;;
+            --telegram-token)
+                ARG_TELEGRAM_TOKEN="$2"
+                shift 2
+                ;;
+            -p|--port)
+                ARG_PORT="$2"
+                shift 2
+                ;;
+            -h|--help)
+                print_usage
+                exit 0
+                ;;
+            *)
+                print_error "Unknown option: $1"
+                print_usage
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ -n "$ARG_API_KEY" || -n "$ARG_INSTALL_TYPE" ]]; then
+        ARGS_PROVIDED=true
+    fi
+}
+
+is_interactive() {
+    [[ -t 0 ]]
+}
+
+check_non_interactive() {
+    if ! is_interactive; then
+        if [[ "$ARGS_PROVIDED" == "true" ]]; then
+            NON_INTERACTIVE=true
+        else
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+            echo -e "${YELLOW}  Interactive mode detected via pipe!${NC}"
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+            echo ""
+            echo -e "${BOLD}To use interactively, run:${NC}"
+            echo ""
+            echo "  curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh -o install.sh && bash install.sh"
+            echo ""
+            echo -e "${BOLD}Or provide arguments:${NC}"
+            echo ""
+            echo "  curl -fsSL https://raw.githubusercontent.com/foxxlabs/foxxgent/master/install.sh | bash -s -- --type docker --api-key KEY"
+            echo ""
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+            echo ""
+            exit 0
+        fi
+    fi
+}
 
 print_header() {
     echo -e "\n${BOLD}${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -57,6 +147,29 @@ prompt_input() {
     local default="$4"
     local value=""
 
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local arg_var=""
+        case "$var_name" in
+            "OPENROUTER_API_KEY") arg_var="ARG_API_KEY" ;;
+            "TELEGRAM_BOT_KEY") arg_var="ARG_TELEGRAM_TOKEN" ;;
+            "PORT") arg_var="ARG_PORT" ;;
+        esac
+
+        if [[ -n "$arg_var" && -n "${!arg_var}" ]]; then
+            eval "$var_name='${!arg_var}'"
+            return
+        fi
+    fi
+
+    if ! is_interactive; then
+        if [[ "$required" == "true" ]]; then
+            print_error "$var_name is required in non-interactive mode"
+            exit 1
+        fi
+        eval "$var_name='$default'"
+        return
+    fi
+
     while true; do
         if [[ -n "$default" ]]; then
             echo -en "${CYAN}$prompt${NC} [$default]: "
@@ -81,6 +194,29 @@ prompt_input() {
 }
 
 select_install_type() {
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        case "$ARG_INSTALL_TYPE" in
+            local|docker)
+                INSTALL_TYPE="$ARG_INSTALL_TYPE"
+                ;;
+            "")
+                print_error "Installation type required in non-interactive mode. Use --type local or --type docker"
+                exit 1
+                ;;
+            *)
+                print_error "Invalid installation type: $ARG_INSTALL_TYPE. Use 'local' or 'docker'"
+                exit 1
+                ;;
+        esac
+        print_info "Using installation type: $INSTALL_TYPE"
+        return
+    fi
+
+    if ! is_interactive; then
+        print_error "Cannot prompt for input in non-interactive mode"
+        exit 1
+    fi
+
     echo -e "${BOLD}Select installation type:${NC}"
     echo ""
     echo "  1) Local (Python virtualenv)"
@@ -107,6 +243,48 @@ select_install_type() {
     done
     
     echo ""
+}
+
+setup_env_file() {
+    print_step "Setting up environment configuration..."
+    
+    if [[ -f "$SCRIPT_DIR/.env" ]]; then
+        print_info ".env file already exists"
+        if is_interactive; then
+            echo -en "${YELLOW}Overwrite existing .env?${NC} [y/N]: "
+            read -r confirm
+            if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+                print_info "Keeping existing .env file"
+                return 0
+            fi
+        else
+            print_info "Keeping existing .env file (non-interactive)"
+            return 0
+        fi
+    fi
+    
+    echo ""
+    print_info "Required configuration:"
+    echo ""
+    
+    prompt_input "OpenRouter API Key" "OPENROUTER_API_KEY" "true"
+    
+    echo ""
+    print_info "Optional configuration:"
+    echo ""
+    
+    prompt_input "Telegram Bot Token (press Enter to skip)" "TELEGRAM_BOT_KEY" "false" ""
+    prompt_input "Database path (press Enter for default)" "DB_PATH" "false" "foxxgent.db"
+    prompt_input "Server port (press Enter for default)" "PORT" "false" "${ARG_PORT:-8000}"
+    
+    cat > "$SCRIPT_DIR/.env" << EOF
+OPENROUTER_API_KEY=$OPENROUTER_API_KEY
+TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY
+DB_PATH=$DB_PATH
+PORT=$PORT
+EOF
+    
+    print_success "Created .env file"
 }
 
 check_docker() {
@@ -206,43 +384,6 @@ create_directories() {
     done
 }
 
-setup_env_file() {
-    print_step "Setting up environment configuration..."
-    
-    if [[ -f "$SCRIPT_DIR/.env" ]]; then
-        print_info ".env file already exists"
-        echo -en "${YELLOW}Overwrite existing .env?${NC} [y/N]: "
-        read -r confirm
-        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-            print_info "Keeping existing .env file"
-            return 0
-        fi
-    fi
-    
-    echo ""
-    print_info "Required configuration:"
-    echo ""
-    
-    prompt_input "OpenRouter API Key" "OPENROUTER_API_KEY" "true"
-    
-    echo ""
-    print_info "Optional configuration:"
-    echo ""
-    
-    prompt_input "Telegram Bot Token (press Enter to skip)" "TELEGRAM_BOT_KEY" "false" ""
-    prompt_input "Database path (press Enter for default)" "DB_PATH" "false" "foxxgent.db"
-    prompt_input "Server port (press Enter for default)" "PORT" "false" "8000"
-    
-    cat > "$SCRIPT_DIR/.env" << EOF
-OPENROUTER_API_KEY=$OPENROUTER_API_KEY
-TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY
-DB_PATH=$DB_PATH
-PORT=$PORT
-EOF
-    
-    print_success "Created .env file"
-}
-
 check_python() {
     print_step "Checking Python installation..."
     
@@ -271,14 +412,18 @@ setup_virtual_env() {
     
     if [[ -d "$venv_dir" ]]; then
         print_info "Virtual environment already exists"
-        echo -en "${YELLOW}Recreate virtual environment?${NC} [y/N]: "
-        read -r confirm
-        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-            rm -rf "$venv_dir"
-            python3 -m venv "$venv_dir"
-            print_success "Virtual environment recreated"
+        if is_interactive; then
+            echo -en "${YELLOW}Recreate virtual environment?${NC} [y/N]: "
+            read -r confirm
+            if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                rm -rf "$venv_dir"
+                python3 -m venv "$venv_dir"
+                print_success "Virtual environment recreated"
+            else
+                print_info "Using existing virtual environment"
+            fi
         else
-            print_info "Using existing virtual environment"
+            print_info "Using existing virtual environment (non-interactive)"
         fi
     else
         python3 -m venv "$venv_dir"
@@ -345,6 +490,9 @@ local_setup() {
 }
 
 main() {
+    parse_arguments "$@"
+    check_non_interactive
+    
     print_header
     
     echo -e "${BOLD}Welcome to FoxxGent!${NC}"
