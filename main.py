@@ -1050,10 +1050,24 @@ async def get_connection_skills():
 @app.get("/api/connections/{app_id}/config")
 async def get_connection_config(app_id: str):
     from connection_manager import connection_manager
+    from app_registry import get_app_config
+    from dataclasses import asdict
+    
     conn = connection_manager.get_connection(app_id)
     if conn:
-        return JSONResponse({"config": conn.get("config_extra", {}), "status": "connected"})
-    return JSONResponse({"error": "Not connected"}, status_code=404)
+        return JSONResponse({"status": "connected", "name": conn.get("name"), "config": conn.get("config_extra", {})})
+    
+    app = get_app_config(app_id)
+    if app:
+        return JSONResponse({
+            "status": "available",
+            "name": app.name,
+            "category": app.category,
+            "auth_type": app.auth_type,
+            "auth_fields": app.auth_fields,
+            "documentation": app.documentation
+        })
+    return JSONResponse({"error": "App not found"}, status_code=404)
 
 @app.post("/api/connections/execute")
 async def execute_connection_action(request: Request):

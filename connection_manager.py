@@ -8,6 +8,7 @@ from datetime import datetime
 import httpx
 import aiohttp
 
+from dataclasses import asdict
 from app_registry import APP_REGISTRY, get_app_config, get_apps_by_category, get_all_apps
 
 logger = logging.getLogger("foxxgent")
@@ -1606,9 +1607,19 @@ async def disconnect_app(app_id: str) -> Dict[str, Any]:
 
 
 def get_connection_status() -> Dict[str, Any]:
+    by_category_raw = get_apps_by_category()
+    by_category = {}
+    for category, apps in by_category_raw.items():
+        by_category[category] = [asdict(app) for app in apps]
+    
+    all_apps = get_all_apps()
+    available_apps = [asdict(app) for app in all_apps]
+    
     return {
         "connected": connection_manager.get_connected_apps(),
-        "count": len(connection_manager.connections)
+        "count": len(connection_manager.connections),
+        "by_category": by_category,
+        "available_apps": available_apps
     }
 
 
